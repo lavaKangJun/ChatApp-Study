@@ -21,6 +21,7 @@
 		511A1C98225B859D001206E0 /* ChatLogController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 511A1C97225B859D001206E0 /* ChatLogController.swift */; };
 		511A1C9A225C6B5A001206E0 /* Message.swift in Sources */ = {isa = PBXBuildFile; fileRef = 511A1C99225C6B5A001206E0 /* Message.swift */; };
 		511A1C9D225C7515001206E0 /* UserCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 511A1C9C225C7515001206E0 /* UserCell.swift */; };
+		511A1C9F225DF7B5001206E0 /* ChatMessageCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 511A1C9E225DF7B5001206E0 /* ChatMessageCell.swift */; };
 		BE8445A1D03F21900E9C8973 /* Pods_FirebaseChat.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C84A4CA8D019A90357358864 /* Pods_FirebaseChat.framework */; };
 /* End PBXBuildFile section */
 
@@ -42,6 +43,7 @@
 		511A1C97225B859D001206E0 /* ChatLogController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatLogController.swift; sourceTree = "<group>"; };
 		511A1C99225C6B5A001206E0 /* Message.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Message.swift; sourceTree = "<group>"; };
 		511A1C9C225C7515001206E0 /* UserCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserCell.swift; sourceTree = "<group>"; };
+		511A1C9E225DF7B5001206E0 /* ChatMessageCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMessageCell.swift; sourceTree = "<group>"; };
 		7912C1021CF0C3BD7A05FC89 /* Pods-FirebaseChat.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FirebaseChat.debug.xcconfig"; path = "Pods/Target Support Files/Pods-FirebaseChat/Pods-FirebaseChat.debug.xcconfig"; sourceTree = "<group>"; };
 		C84A4CA8D019A90357358864 /* Pods_FirebaseChat.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_FirebaseChat.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -118,6 +120,7 @@
 			isa = PBXGroup;
 			children = (
 				511A1C9C225C7515001206E0 /* UserCell.swift */,
+				511A1C9E225DF7B5001206E0 /* ChatMessageCell.swift */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -273,6 +276,7 @@
 				511A1C94225B3795001206E0 /* LoginController+handlers.swift in Sources */,
 				511A1C8B22536733001206E0 /* LoginController.swift in Sources */,
 				511A1C9222577CD3001206E0 /* User.swift in Sources */,
+				511A1C9F225DF7B5001206E0 /* ChatMessageCell.swift in Sources */,
 				511A1C7622536452001206E0 /* AppDelegate.swift in Sources */,
 				511A1C9D225C7515001206E0 /* UserCell.swift in Sources */,
 				511A1C98225B859D001206E0 /* ChatLogController.swift in Sources */,

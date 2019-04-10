@@ -12,25 +12,7 @@ import Firebase
 class UserTableCell: UITableViewCell {
     var message: Message? {
         didSet {
-            if let toId = message?.toId {
-                let ref = Database.database().reference().child("users").child(toId)
-                ref.observeSingleEvent(of: .value, with: { (snapshot) in
-                    if let dictionary = snapshot.value as? [String: AnyObject] {
-                        self.textLabel?.text = dictionary["name"] as? String
-                        guard let imageUrl = dictionary["profileImage"] as? String else {
-                            return
-                        }
-                        self.profileImage.setProfileImage(strurl: imageUrl)
-                    }
-                }, withCancel: nil)
-            }
-            self.detailTextLabel?.text = message?.text
-            if let stamp = message?.timestampe{
-                let time = NSDate(timeIntervalSince1970: Double(stamp))
-                let dateFormatter = DateFormatter()
-                dateFormatter.dateFormat = "hh:mm:ss a"
-                self.timeLabel.text = dateFormatter.string(from: time as Date)
-            }
+            setUpChatter()
         }
     }
     let profileImage: UIImageView = {
@@ -74,5 +56,27 @@ class UserTableCell: UITableViewCell {
     
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    private func setUpChatter() {
+        if let id = message?.chatParterId() {
+            let ref = Database.database().reference().child("users").child(id)
+            ref.observeSingleEvent(of: .value, with: { (snapshot) in
+                if let dictionary = snapshot.value as? [String: AnyObject] {
+                    self.textLabel?.text = dictionary["name"] as? String
+                    guard let imageUrl = dictionary["profileImage"] as? String else {
+                        return
+                    }
+                    self.profileImage.setProfileImage(strurl: imageUrl)
+                }
+            }, withCancel: nil)
+        }
+        self.detailTextLabel?.text = message?.text
+        if let stamp = message?.timestampe{
+            let time = NSDate(timeIntervalSince1970: Double(stamp))
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "hh:mm:ss a"
+            self.timeLabel.text = dateFormatter.string(from: time as Date)
+        }
     }
 }

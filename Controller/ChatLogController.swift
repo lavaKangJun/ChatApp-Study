@@ -9,9 +9,9 @@
 import UIKit
 import Firebase
 
-private let reuseIdentifier = "Cell"
 
-class ChatLogController: UICollectionViewController, UITextFieldDelegate {
+class ChatLogController: UICollectionViewController, UITextFieldDelegate, UICollectionViewDelegateFlowLayout
+{
     
     let container: UIView = {
         let view = UIView()
@@ -38,9 +38,12 @@ class ChatLogController: UICollectionViewController, UITextFieldDelegate {
         view.backgroundColor = UIColor(r: 220, g: 220, b: 220)
         return view
     }()
+    let cellId = "cellId"
+    var messages = [Message]()
     var user: User? {
         didSet {
             self.navigationItem.title = user?.name
+            observeMessage()
         }
     }
 
@@ -48,14 +51,45 @@ class ChatLogController: UICollectionViewController, UITextFieldDelegate {
         super.viewDidLoad()
 
         self.collectionView.backgroundColor = UIColor.white
-
+        self.collectionView.alwaysBounceVertical = true
         // Register cell classes
-        self.collectionView!.register(UICollectionViewCell.self, forCellWithReuseIdentifier: reuseIdentifier)
+        self.collectionView!.register(ChatMessageCell.self, forCellWithReuseIdentifier: cellId)
         setupComponents()
+        
+    }
+    
+    func observeMessage() {
+        guard let uid = Auth.auth().currentUser?.uid else {
+            return
+        }
+        let ref = Database.database().reference().child("user-message").child(uid)
+        ref.observe(.childAdded, with: { (snapshot) in
+            let messageId = snapshot.key
+            let messageRef = Database.database().reference().child("messages").child(messageId)
+            messageRef.observeSingleEvent(of: .value, with: { (snapshot) in
+                guard let dictionary = snapshot.value as? [String: AnyObject] else {
+                    return
+                }
+                if self.user!.id == dictionary["toId"] as? String {
+                    let message = Message()
+                    message.fromId = dictionary["fromId"] as? String
+                    message.toId = dictionary["toId"] as? String
+                    message.text = dictionary["text"] as? String
+                    message.timestampe = dictionary["timestampe"] as? Int
+                    self.messages.append(message)
+                    
+                    DispatchQueue.main.async {
+                        self.collectionView.reloadData()
+                    }
+                }
+            }, withCancel: nil)
+           
+        }, withCancel: nil)
     }
     
     func setupComponents() {
         self.view.addSubview(container)
+        container.backgroundColor = UIColor.white
         NSLayoutConstraint.activate([
             container.leadingAnchor.constraint(equalTo: self.view.leadingAnchor),
             container.trailingAnchor.constraint(equalTo: self.view.trailingAnchor),
@@ -97,11 +131,42 @@ class ChatLogController: UICollectionViewController, UITextFieldDelegate {
             return
         }
         let timestampe = Int(NSDate().timeIntervalSince1970)
-        childRef.updateChildValues(["text": text, "toId": toId, "fromId": fromId, "timestampe": timestampe])
+        childRef.updateChildValues(["text": text, "toId": toId, "fromId": fromId, "timestampe": timestampe]) { (error, reference) in
+            if error != nil {
+                print(error)
+            }
+            let fromRef = Database.database().reference().child("user-message").child(fromId)
+            let toRef = Database.database().reference().child("user-message").child(toId)
+            guard let messageId = reference.key else {
+                return
+            }
+            fromRef.updateChildValues([messageId: 1])
+            toRef.updateChildValues([messageId: 1])
+        }
     }
     
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         sendChat()
         return true
+    }
+    
+    override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier:
+            cellId, for: indexPath) as? ChatMessageCell else {
+            return UICollectionViewCell()
+        }
+        let message = messages[indexPath.item]
+        cell.textView.text = message.text
+        return cell
+    }
+    
+    override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return messages.count
+    }
+    
+    func collectionView(_ collectionView: UICollectionView,
+                                 layout collectionViewLayout: UICollectionViewLayout,
+                                 sizeForItemAt indexPath: IndexPath) -> CGSize {
+        return CGSize(width: view.frame.width, height: 80)
     }
 }

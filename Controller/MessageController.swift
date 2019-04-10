@@ -20,37 +20,42 @@ class MessageController: UITableViewController {
         checkUserLogin()
         navigationItem.rightBarButtonItem = UIBarButtonItem(title: "New", style: .plain, target: self, action: #selector(handleNewMessage))
         tableView.register(UserTableCell.self, forCellReuseIdentifier: "cellId")
-        observeChat()
     }
     
-    func observeChat() {
-        let ref = Database.database().reference().child("messages")
-        ref.observe(.childAdded, with: { [weak self] (snapShot) in
-            guard let dictionary = snapShot.value as? [String: AnyObject] else {
-                return
-            }
-            guard let self = self else {
-                return
-            }
-            let message = Message()
-            message.fromId = dictionary["fromId"] as? String
-            message.text  = dictionary["text"] as? String
-            message.toId = dictionary["toId"] as? String
-            message.timestampe = dictionary["timestampe"] as? Int
+    func observeUserChat() {
+        guard let user = Auth.auth().currentUser?.uid else {
+            return
+        }
+        let ref = Database.database().reference().child("user-message").child(user)
+        ref.observe(.childAdded, with: { (snapshot) in
+            let messageId = snapshot.key
+            let messageRef = Database.database().reference().child("messages").child(messageId)
+            messageRef.observe(.value, with: { (msgSnapshot) in
+                guard let dictionary = msgSnapshot.value as? [String: AnyObject] else {
+                    return
+                }
             
-            if let toId = message.toId {
-                self.dicMessages[toId] = message
-                self.messages = Array(self.dicMessages.values)
-                self.messages.sort(by: { (message1, message2) -> Bool in
-                    return message1.timestampe! > message2.timestampe!
-                })
-            }
-
-            DispatchQueue.main.async {
-                self.tableView.reloadData()
-            }
+                let message = Message()
+                message.fromId = dictionary["fromId"] as? String
+                message.text  = dictionary["text"] as? String
+                message.toId = dictionary["toId"] as? String
+                message.timestampe = dictionary["timestampe"] as? Int
+                
+                if let toId = message.toId {
+                    self.dicMessages[toId] = message
+                    self.messages = Array(self.dicMessages.values)
+                    self.messages.sort(by: { (message1, message2) -> Bool in
+                        return message1.timestampe! > message2.timestampe!
+                    })
+                }
+                
+                DispatchQueue.main.async {
+                    self.tableView.reloadData()
+                }
+            }, withCancel: nil)
         }, withCancel: nil)
     }
+    
     
     func checkUserLogin() {
         if Auth.auth().currentUser?.uid == nil {
@@ -77,6 +82,10 @@ class MessageController: UITableViewController {
     }
     
     func setupNaviTitleView(user: User) {
+        messages.removeAll()
+        dicMessages.removeAll()
+        tableView.reloadData()
+        observeUserChat()
         let titleView = UIView()
         titleView.backgroundColor = UIColor.red
         self.navigationItem.titleView = titleView
@@ -119,7 +128,6 @@ class MessageController: UITableViewController {
     }
     
     func handleChat(user: User) {
-        print(123)
         let chatLogController = ChatLogController(collectionViewLayout: UICollectionViewFlowLayout())
         chatLogController.user = user
         navigationController?.pushViewController(chatLogController, animated: true)
@@ -157,6 +165,24 @@ class MessageController: UITableViewController {
     
     override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         return 72
+    }
+    
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        guard let parterId = messages[indexPath.row].chatParterId() else {
+            return
+        }
+        let ref = Database.database().reference().child("users").child(parterId)
+        ref.observeSingleEvent(of: .value, with: { [weak self] (sanpshot) in
+            guard let dictionary = sanpshot.value as? [String: AnyObject] else {
+                return
+            }
+            let user = User()
+            user.id = parterId
+            user.email = dictionary["email"] as? String
+            user.name = dictionary["name"] as? String
+            user.profileImage = dictionary["profileImage"] as? String
+            self?.handleChat(user: user)
+        }, withCancel: nil)
     }
 }
 
