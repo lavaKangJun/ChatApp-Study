@@ -57,7 +57,10 @@ class UserTableCell: UITableViewCell {
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        profileImage.image = nil
+    }
     private func setUpChatter() {
         if let id = message?.chatParterId() {
             let ref = Database.database().reference().child("users").child(id)

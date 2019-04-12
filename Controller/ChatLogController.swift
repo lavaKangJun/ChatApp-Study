@@ -12,12 +12,6 @@ import Firebase
 
 class ChatLogController: UICollectionViewController, UITextFieldDelegate, UICollectionViewDelegateFlowLayout
 {
-    
-    let container: UIView = {
-        let view = UIView()
-        view.translatesAutoresizingMaskIntoConstraints = false
-        return view
-    }()
     let sendButton: UIButton = {
         let button = UIButton(type: .system)
         button.translatesAutoresizingMaskIntoConstraints = false
@@ -46,16 +40,86 @@ class ChatLogController: UICollectionViewController, UITextFieldDelegate, UIColl
             observeMessage()
         }
     }
-
+    var containerBottomAnchor: NSLayoutConstraint?
+    lazy var inputCotainerView: UIView = {
+        let container = UIView()
+        container.backgroundColor = UIColor.white
+        container.frame = CGRect(x: 0, y: 0, width: view.frame.width, height: 80)
+        container.addSubview(seperator)
+        NSLayoutConstraint.activate([
+            seperator.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            seperator.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+            seperator.topAnchor.constraint(equalTo: container.topAnchor),
+            seperator.heightAnchor.constraint(equalToConstant: 1)
+            ])
+        container.addSubview(sendButton)
+        NSLayoutConstraint.activate([
+            sendButton.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -10),
+            sendButton.centerYAnchor.constraint(equalTo: container.centerYAnchor),
+            sendButton.widthAnchor.constraint(lessThanOrEqualToConstant: 50)
+            ])
+        container.addSubview(chatTextField)
+        NSLayoutConstraint.activate([
+            chatTextField.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 10),
+            chatTextField.centerYAnchor.constraint(equalTo: container.centerYAnchor),
+            chatTextField.trailingAnchor.constraint(equalTo: sendButton.leadingAnchor)
+            ])
+        return container
+    }()
+    
+    override var inputAccessoryView: UIView? {
+        get {
+            return inputCotainerView
+        }
+    }
+    
+    override var canBecomeFirstResponder: Bool {
+        return true
+    }
+    
+    
     override func viewDidLoad() {
         super.viewDidLoad()
 
         self.collectionView.backgroundColor = UIColor.white
         self.collectionView.alwaysBounceVertical = true
+        self.collectionView.contentInset = UIEdgeInsets(top: 8, left: 0, bottom: 12, right: 0)
         // Register cell classes
-        self.collectionView!.register(ChatMessageCell.self, forCellWithReuseIdentifier: cellId)
-        setupComponents()
+        collectionView.keyboardDismissMode = .interactive
         
+    }
+    
+    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+        super.viewWillTransition(to: size, with: coordinator)
+        collectionView.collectionViewLayout.invalidateLayout()
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    func setupKeyboardObserve() {
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow), name: UIResponder.keyboardWillShowNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide), name: UIResponder.keyboardWillHideNotification, object: nil)
+        
+    }
+    
+    @objc func keyboardWillShow(notification: NSNotification) {
+        guard let keyboardFrame = notification.userInfo?["UIKeyboardFrameEndUserInfoKey"] as? NSValue else {
+            return
+        }
+        guard let keyboarDuration = notification.userInfo?["UIKeyboardAnimationDurationUserInfoKey"] as? Double else {
+            return
+        }
+        containerBottomAnchor?.constant = -keyboardFrame.cgRectValue.height
+        UIView.animate(withDuration: keyboarDuration) {
+            self.view.layoutIfNeeded()
+        }
+    }
+    
+    @objc func keyboardWillHide() {
+        containerBottomAnchor?.constant = 0
     }
     
     func observeMessage() {
@@ -67,55 +131,26 @@ class ChatLogController: UICollectionViewController, UITextFieldDelegate, UIColl
             let messageId = snapshot.key
             let messageRef = Database.database().reference().child("messages").child(messageId)
             messageRef.observeSingleEvent(of: .value, with: { (snapshot) in
+                print(snapshot)
                 guard let dictionary = snapshot.value as? [String: AnyObject] else {
                     return
                 }
-                if self.user!.id == dictionary["toId"] as? String {
-                    let message = Message()
-                    message.fromId = dictionary["fromId"] as? String
-                    message.toId = dictionary["toId"] as? String
-                    message.text = dictionary["text"] as? String
-                    message.timestampe = dictionary["timestampe"] as? Int
+                let message = Message()
+                message.fromId = dictionary["fromId"] as? String
+                message.toId = dictionary["toId"] as? String
+                message.text = dictionary["text"] as? String
+                message.timestampe = dictionary["timestampe"] as? Int
+                
+                if message.chatParterId() == self.user?.id {
                     self.messages.append(message)
-                    
                     DispatchQueue.main.async {
                         self.collectionView.reloadData()
                     }
                 }
+                
             }, withCancel: nil)
            
         }, withCancel: nil)
-    }
-    
-    func setupComponents() {
-        self.view.addSubview(container)
-        container.backgroundColor = UIColor.white
-        NSLayoutConstraint.activate([
-            container.leadingAnchor.constraint(equalTo: self.view.leadingAnchor),
-            container.trailingAnchor.constraint(equalTo: self.view.trailingAnchor),
-            container.bottomAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.bottomAnchor),
-            container.heightAnchor.constraint(equalToConstant: 60)
-            ])
-        self.view.addSubview(seperator)
-        NSLayoutConstraint.activate([
-            seperator.leadingAnchor.constraint(equalTo: self.view.leadingAnchor),
-            seperator.trailingAnchor.constraint(equalTo: self.view.trailingAnchor),
-            seperator.bottomAnchor.constraint(equalTo: container.topAnchor),
-            seperator.heightAnchor.constraint(equalToConstant: 1)
-            ])
-        container.addSubview(sendButton)
-        NSLayoutConstraint.activate([
-            sendButton.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -10),
-            sendButton.bottomAnchor.constraint(equalTo: container.bottomAnchor),
-            sendButton.heightAnchor.constraint(equalTo: container.heightAnchor),
-            sendButton.widthAnchor.constraint(lessThanOrEqualToConstant: 50),
-            ])
-        container.addSubview(chatTextField)
-        NSLayoutConstraint.activate([
-            chatTextField.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 10),
-            chatTextField.heightAnchor.constraint(equalTo: container.heightAnchor),
-            chatTextField.trailingAnchor.constraint(equalTo: sendButton.leadingAnchor)
-            ])
     }
     
     @objc func sendChat() {
@@ -135,6 +170,7 @@ class ChatLogController: UICollectionViewController, UITextFieldDelegate, UIColl
             if error != nil {
                 print(error)
             }
+            self.chatTextField.text = nil
             let fromRef = Database.database().reference().child("user-message").child(fromId)
             let toRef = Database.database().reference().child("user-message").child(toId)
             guard let messageId = reference.key else {
@@ -157,9 +193,35 @@ class ChatLogController: UICollectionViewController, UITextFieldDelegate, UIColl
         }
         let message = messages[indexPath.item]
         cell.textView.text = message.text
+        
+        if let text = message.text {
+            cell.messageViewWidthAnchor?.constant =
+                estimatedMessageHeight(text: text).width + 30
+        }
+        setupCell(cell: cell, message: message)
+        
         return cell
     }
     
+    private func setupCell(cell: ChatMessageCell, message: Message) {
+        if message.fromId == Auth.auth().currentUser?.uid {
+            cell.messageView.backgroundColor = UIColor(r: 0, g: 136, b: 249)
+            cell.textView.textColor = UIColor.white
+            cell.messageViewLeadingAnchor?.isActive = false
+            cell.messageViewTrailingAnchor?.isActive = true
+            cell.parterImage.isHidden = true
+        } else {
+            cell.messageView.backgroundColor = UIColor(r: 220, g: 220, b: 220)
+            cell.textView.textColor = UIColor.black
+            cell.messageViewLeadingAnchor?.isActive = true
+            cell.messageViewTrailingAnchor?.isActive = false
+            cell.parterImage.isHidden = false
+            if let image = user?.profileImage {
+                cell.parterImage.setProfileImage(strurl: image)
+            }
+        }
+           
+    }
     override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return messages.count
     }
@@ -167,6 +229,16 @@ class ChatLogController: UICollectionViewController, UITextFieldDelegate, UIColl
     func collectionView(_ collectionView: UICollectionView,
                                  layout collectionViewLayout: UICollectionViewLayout,
                                  sizeForItemAt indexPath: IndexPath) -> CGSize {
-        return CGSize(width: view.frame.width, height: 80)
+        var height: CGFloat = 80
+        if let text = messages[indexPath.row].text {
+            height = estimatedMessageHeight(text: text).height
+        }
+        return CGSize(width: view.frame.width, height: height + 20)
+    }
+    
+    private func estimatedMessageHeight(text: String) -> CGRect {
+        let size = CGSize(width: 200, height: 1000)
+        let option = NSStringDrawingOptions.usesFontLeading.union(.usesLineFragmentOrigin)
+        return NSString(string: text).boundingRect(with: size, options: option, attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 16)], context: nil)
     }
 }
