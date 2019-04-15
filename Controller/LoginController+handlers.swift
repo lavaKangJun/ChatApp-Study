@@ -23,7 +23,6 @@ extension LoginController: UIImagePickerControllerDelegate, UINavigationControll
     }
     
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
-        print(info)
         if let editedImage = info[UIImagePickerController.InfoKey.editedImage] as? UIImage {
             self.profileImage.image = editedImage
         } else if let originalImage = info[UIImagePickerController.InfoKey.originalImage] as? UIImage {

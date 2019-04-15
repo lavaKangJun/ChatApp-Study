@@ -13,6 +13,7 @@ class Message: NSObject {
     var fromId: String?
     var timestampe: Int?
     var text: String?
+    var imageUrl: String?
     
     func chatParterId() -> String? {
         let user = Auth.auth().currentUser?.uid

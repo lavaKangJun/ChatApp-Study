@@ -9,13 +9,13 @@
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "Controller/MessageController.swift"
-            timestampString = "577014392.298833"
+            filePath = "Controller/ChatLogController.swift"
+            timestampString = "577020492.2035511"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "185"
-            endingLineNumber = "185"
-            landmarkName = "tableView(_:didSelectRowAt:)"
+            startingLineNumber = "252"
+            endingLineNumber = "252"
+            landmarkName = "setupCell(cell:message:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -25,13 +25,29 @@
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "Controller/MessageController.swift"
-            timestampString = "577014392.299181"
+            filePath = "Controller/ChatLogController.swift"
+            timestampString = "577020492.204087"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "191"
-            endingLineNumber = "191"
-            landmarkName = "tableView(_:didSelectRowAt:)"
+            startingLineNumber = "232"
+            endingLineNumber = "232"
+            landmarkName = "setupCell(cell:message:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Controller/ChatLogController.swift"
+            timestampString = "577020492.204495"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "250"
+            endingLineNumber = "250"
+            landmarkName = "setupCell(cell:message:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

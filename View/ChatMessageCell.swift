@@ -33,7 +33,13 @@ class ChatMessageCell: UICollectionViewCell {
         imageView.layer.masksToBounds = true
         imageView.image = UIImage(named: "world")
         imageView.isHidden = true
-    //    imageView.contentMode = UIView.ContentMode.scaleAspectFit
+        return imageView
+    }()
+    let messageImage: UIImageView = {
+        let imageView = UIImageView()
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        imageView.layer.cornerRadius = 16
+        imageView.layer.masksToBounds = true
         return imageView
     }()
     
@@ -67,6 +73,13 @@ class ChatMessageCell: UICollectionViewCell {
             parterImage.bottomAnchor.constraint(equalTo: messageView.bottomAnchor),
             parterImage.heightAnchor.constraint(equalToConstant: 32),
             parterImage.widthAnchor.constraint(equalToConstant: 32)
+            ])
+        messageView.addSubview(messageImage)
+        NSLayoutConstraint.activate([
+            messageImage.topAnchor.constraint(equalTo: messageView.topAnchor),
+            messageImage.leadingAnchor.constraint(equalTo: messageView.leadingAnchor),
+            messageImage.trailingAnchor.constraint(equalTo: messageView.trailingAnchor),
+            messageImage.heightAnchor.constraint(equalTo: messageView.heightAnchor)
             ])
     }
     

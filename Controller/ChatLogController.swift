@@ -10,7 +10,7 @@ import UIKit
 import Firebase
 
 
-class ChatLogController: UICollectionViewController, UITextFieldDelegate, UICollectionViewDelegateFlowLayout
+class ChatLogController: UICollectionViewController, UITextFieldDelegate, UICollectionViewDelegateFlowLayout, UIImagePickerControllerDelegate, UINavigationControllerDelegate
 {
     let sendButton: UIButton = {
         let button = UIButton(type: .system)
@@ -31,6 +31,14 @@ class ChatLogController: UICollectionViewController, UITextFieldDelegate, UIColl
         view.translatesAutoresizingMaskIntoConstraints = false
         view.backgroundColor = UIColor(r: 220, g: 220, b: 220)
         return view
+    }()
+    lazy var imageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        imageView.isUserInteractionEnabled = true
+        imageView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleTapGesture)))
+        imageView.image = UIImage(named: "picture")
+        return imageView
     }()
     let cellId = "cellId"
     var messages = [Message]()
@@ -58,9 +66,16 @@ class ChatLogController: UICollectionViewController, UITextFieldDelegate, UIColl
             sendButton.centerYAnchor.constraint(equalTo: container.centerYAnchor),
             sendButton.widthAnchor.constraint(lessThanOrEqualToConstant: 50)
             ])
+        container.addSubview(imageView)
+        NSLayoutConstraint.activate([
+            imageView.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 8),
+            imageView.centerYAnchor.constraint(equalTo: container.centerYAnchor),
+            imageView.heightAnchor.constraint(equalToConstant: 40),
+            imageView.widthAnchor.constraint(equalToConstant: 40)
+            ])
         container.addSubview(chatTextField)
         NSLayoutConstraint.activate([
-            chatTextField.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 10),
+            chatTextField.leadingAnchor.constraint(equalTo: imageView.trailingAnchor, constant: 10),
             chatTextField.centerYAnchor.constraint(equalTo: container.centerYAnchor),
             chatTextField.trailingAnchor.constraint(equalTo: sendButton.leadingAnchor)
             ])
@@ -103,6 +118,13 @@ class ChatLogController: UICollectionViewController, UITextFieldDelegate, UIColl
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide), name: UIResponder.keyboardWillHideNotification, object: nil)
         
     }
+    @objc func handleTapGesture() {
+        print("tap")
+        let imagePicker = UIImagePickerController()
+        imagePicker.delegate = self
+        imagePicker.allowsEditing = true
+        present(imagePicker, animated: true, completion: nil)
+    }
     
     @objc func keyboardWillShow(notification: NSNotification) {
         guard let keyboardFrame = notification.userInfo?["UIKeyboardFrameEndUserInfoKey"] as? NSValue else {
@@ -137,7 +159,12 @@ class ChatLogController: UICollectionViewController, UITextFieldDelegate, UIColl
                 let message = Message()
                 message.fromId = dictionary["fromId"] as? String
                 message.toId = dictionary["toId"] as? String
-                message.text = dictionary["text"] as? String
+                if let text = dictionary["text"] {
+                     message.text = text as? String
+                }
+                if let imageUrl = dictionary["imageUrl"] {
+                    message.imageUrl = imageUrl as? String
+                }
                 message.timestampe = dictionary["timestampe"] as? Int
                 
                 if message.chatParterId() == self.user?.id {
@@ -219,6 +246,14 @@ class ChatLogController: UICollectionViewController, UITextFieldDelegate, UIColl
                 cell.parterImage.setProfileImage(strurl: image)
             }
         }
+        
+        if let imageUrl = message.imageUrl {
+            cell.messageImage.backgroundColor = UIColor.clear
+            cell.messageImage.setProfileImage(strurl: imageUrl)
+            cell.messageImage.isHidden = false
+        } else {
+            cell.messageImage.isHidden = true
+        }
            
     }
     override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
@@ -233,6 +268,64 @@ class ChatLogController: UICollectionViewController, UITextFieldDelegate, UIColl
             height = estimatedMessageHeight(text: text).height
         }
         return CGSize(width: view.frame.width, height: height + 20)
+    }
+    
+    func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+        dismiss(animated: true, completion: nil)
+    }
+    
+    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+        var pickedImage: UIImage?
+        if let editedImage = info[UIImagePickerController.InfoKey.editedImage] as? UIImage {
+            pickedImage = editedImage
+        } else if let originalImage = info[UIImagePickerController.InfoKey.originalImage] as? UIImage {
+            pickedImage = originalImage
+        }
+        guard let image = pickedImage, let data = image.jpegData(compressionQuality: 0.1) else {
+            return
+        }
+        let uid = NSUUID().uuidString
+        let storage = Storage.storage().reference().child("message_image").child("\(uid).jpg")
+        storage.putData(data, metadata: nil) { (metadata, error) in
+            if error != nil {
+                print(error)
+            }
+            storage.downloadURL(completion: { [weak self] (url, error) in
+                if error != nil {
+                    print(error)
+                }
+                if let url = url?.absoluteString {
+                    self?.uploadMessageWith(imageUrl: url)
+                }
+            })
+        
+        }
+        self.dismiss(animated: true, completion: nil)
+    }
+    
+    private func uploadMessageWith(imageUrl: String) {
+        let ref = Database.database().reference().child("messages")
+        let childRef = ref.childByAutoId()
+        guard let fromId = Auth.auth().currentUser?.uid else {
+            return
+        }
+        guard let toId = user?.id else {
+            return
+        }
+        let timestampe = Int(NSDate().timeIntervalSince1970)
+        childRef.updateChildValues(["imageUrl": imageUrl, "toId": toId, "fromId": fromId, "timestampe": timestampe]) { (error, reference) in
+            if error != nil {
+                print(error)
+            }
+            self.chatTextField.text = nil
+            let fromRef = Database.database().reference().child("user-message").child(fromId).child(toId)
+            let toRef = Database.database().reference().child("user-message").child(toId).child(fromId)
+            guard let messageId = reference.key else {
+                return
+            }
+            fromRef.updateChildValues([messageId: 1])
+            toRef.updateChildValues([messageId: 1])
+        }
     }
     
     private func estimatedMessageHeight(text: String) -> CGRect {
