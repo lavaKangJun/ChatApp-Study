@@ -66,11 +66,9 @@ class ChatLogController: UICollectionViewController, UITextFieldDelegate, UIColl
             ])
         return container
     }()
-    
+    //inputAccessoryView는 inputView(일반적으로 키보드)위에 뜨는 보조적인 뷰
     override var inputAccessoryView: UIView? {
-        get {
             return inputCotainerView
-        }
     }
     
     override var canBecomeFirstResponder: Bool {
@@ -86,6 +84,7 @@ class ChatLogController: UICollectionViewController, UITextFieldDelegate, UIColl
         self.collectionView.contentInset = UIEdgeInsets(top: 8, left: 0, bottom: 12, right: 0)
         // Register cell classes
         collectionView.keyboardDismissMode = .interactive
+        collectionView.register(ChatMessageCell.self, forCellWithReuseIdentifier: cellId)
         
     }
     
@@ -126,7 +125,7 @@ class ChatLogController: UICollectionViewController, UITextFieldDelegate, UIColl
         guard let uid = Auth.auth().currentUser?.uid else {
             return
         }
-        let ref = Database.database().reference().child("user-message").child(uid)
+        let ref = Database.database().reference().child("user-message").child(uid).child(user!.id!)
         ref.observe(.childAdded, with: { (snapshot) in
             let messageId = snapshot.key
             let messageRef = Database.database().reference().child("messages").child(messageId)
@@ -171,8 +170,8 @@ class ChatLogController: UICollectionViewController, UITextFieldDelegate, UIColl
                 print(error)
             }
             self.chatTextField.text = nil
-            let fromRef = Database.database().reference().child("user-message").child(fromId)
-            let toRef = Database.database().reference().child("user-message").child(toId)
+            let fromRef = Database.database().reference().child("user-message").child(fromId).child(toId)
+            let toRef = Database.database().reference().child("user-message").child(toId).child(fromId)
             guard let messageId = reference.key else {
                 return
             }

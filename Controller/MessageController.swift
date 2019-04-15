@@ -29,30 +29,11 @@ class MessageController: UITableViewController {
         }
         let ref = Database.database().reference().child("user-message").child(user)
         ref.observe(.childAdded, with: { (snapshot) in
-            let messageId = snapshot.key
-            let messageRef = Database.database().reference().child("messages").child(messageId)
-            messageRef.observe(.value, with: { (msgSnapshot) in
-                guard let dictionary = msgSnapshot.value as? [String: AnyObject] else {
-                    return
-                }
-            
-                let message = Message()
-                message.fromId = dictionary["fromId"] as? String
-                message.text  = dictionary["text"] as? String
-                message.toId = dictionary["toId"] as? String
-                message.timestampe = dictionary["timestampe"] as? Int
-                
-                if let chatParterId = message.chatParterId() {
-                    self.dicMessages[chatParterId] = message
-                    self.messages = Array(self.dicMessages.values)
-                    self.messages.sort(by: { (message1, message2) -> Bool in
-                        return message1.timestampe! > message2.timestampe!
-                    })
-                }
-                
-                self.timer?.invalidate()
-                self.timer = Timer.scheduledTimer(timeInterval: 0.1, target: self, selector: #selector(self.handleReloadData), userInfo: nil, repeats: false)
-             
+            let parterId = snapshot.key
+            Database.database().reference().child("user-message").child(user).child(parterId).observe(.childAdded, with: { (sanpshot) in
+                print(sanpshot)
+                let messageId = sanpshot.key
+                self.fetchMessage(messageId: messageId)
             }, withCancel: nil)
         }, withCancel: nil)
     }
@@ -62,6 +43,33 @@ class MessageController: UITableViewController {
             print("ReloadData")
             self.tableView.reloadData()
         }
+    }
+    
+    private func fetchMessage(messageId: String) {
+        let messageRef = Database.database().reference().child("messages").child(messageId)
+        messageRef.observe(.value, with: { (msgSnapshot) in
+            guard let dictionary = msgSnapshot.value as? [String: AnyObject] else {
+                return
+            }
+            
+            let message = Message()
+            message.fromId = dictionary["fromId"] as? String
+            message.text  = dictionary["text"] as? String
+            message.toId = dictionary["toId"] as? String
+            message.timestampe = dictionary["timestampe"] as? Int
+            
+            if let chatParterId = message.chatParterId() {
+                self.dicMessages[chatParterId] = message
+                self.messages = Array(self.dicMessages.values)
+                self.messages.sort(by: { (message1, message2) -> Bool in
+                    return message1.timestampe! > message2.timestampe!
+                })
+            }
+            
+            self.timer?.invalidate()
+            self.timer = Timer.scheduledTimer(timeInterval: 0.1, target: self, selector: #selector(self.handleReloadData), userInfo: nil, repeats: false)
+            
+        }, withCancel: nil)
     }
     
     func checkUserLogin() {
