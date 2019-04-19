@@ -10,11 +10,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Controller/ChatLogController.swift"
-            timestampString = "577020492.2035511"
+            timestampString = "577259941.589524"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "252"
-            endingLineNumber = "252"
+            startingLineNumber = "206"
+            endingLineNumber = "206"
             landmarkName = "setupCell(cell:message:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -26,11 +26,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Controller/ChatLogController.swift"
-            timestampString = "577020492.204087"
+            timestampString = "577259941.590125"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "232"
-            endingLineNumber = "232"
+            startingLineNumber = "186"
+            endingLineNumber = "186"
             landmarkName = "setupCell(cell:message:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -42,11 +42,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Controller/ChatLogController.swift"
-            timestampString = "577020492.204495"
+            timestampString = "577259941.590482"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "250"
-            endingLineNumber = "250"
+            startingLineNumber = "204"
+            endingLineNumber = "204"
             landmarkName = "setupCell(cell:message:)"
             landmarkType = "7">
          </BreakpointContent>

@@ -52,12 +52,7 @@ class MessageController: UITableViewController {
                 return
             }
             
-            let message = Message()
-            message.fromId = dictionary["fromId"] as? String
-            message.text  = dictionary["text"] as? String
-            message.toId = dictionary["toId"] as? String
-            message.timestampe = dictionary["timestampe"] as? Int
-            
+            let message = Message(dictionary: dictionary)
             if let chatParterId = message.chatParterId() {
                 self.dicMessages[chatParterId] = message
                 self.messages = Array(self.dicMessages.values)
